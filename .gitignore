@@ -1,0 +1,7 @@
+*.h5
+*.pb
+*.png
+*.jpg
+*.jpeg
+*.py[co~]
+*.swp

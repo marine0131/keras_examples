@@ -1,0 +1,1 @@
+{"bg": 0, "electric": 4, "glass": 5, "metal": 6, "trash": 10, "plastic": 9, "paper": 8, "cigarette": 2, "milkbox": 7, "cardboard": 1, "cloth": 3}
