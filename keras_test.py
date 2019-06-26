@@ -12,7 +12,8 @@ def read_img(img_path):
     img_data = cv2.resize(img_data, (224, 224))
     img_data = img_data.astype(np.float32)
     img_data = np.expand_dims(img_data, 0)
-    img_data = img_data / 255.0;
+    # img_data = img_data / 255.0;
+    img_data = keras.applications.mobilenet_v2.preprocess_input(img_data)
     return img_data
 
 def find_key_by_value(mydict, value):
@@ -27,6 +28,7 @@ if __name__ == '__main__':
 
     # with keras.utils.CustomObjectScope({'relu6': MobileNetV2.relu6}):
     model = keras.models.load_model(model_path)
+    model.summary()
 
     with open(label_path, 'r') as f:
         classes = json.load(f)

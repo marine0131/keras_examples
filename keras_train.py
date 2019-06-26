@@ -5,8 +5,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 import json
-
-# import mobilenetv2_1 as mn
 from data_generator import DataGenerator
 
 def export_pb(model, output_dir, output_name, clear_devices=True):
@@ -27,30 +25,42 @@ def export_pb(model, output_dir, output_name, clear_devices=True):
     print("save pb model success: {}".format(os.path.join(output_dir, output_name)))
 
 
-# params
-size = 224
+'''
+params
+'''
+size = 299
 batch_size = 128
-epochs = 2
+epochs = 100
 model_path = "./model"
-data_path = "./data/TrashNet"
+data_path = "../train_trash/training_data"
 validation_split = 0.2
-classes = 102
+classes = 12
 export_pbmodel = True
+BASE_MODEL = "inceptionv3" # mobilenetv2
 
 
 '''
 prepare model
 '''
-# get model structure and freezed weights
-base_model = keras.applications.mobilenet_v2.MobileNetV2(
-        input_shape = (size, size, 3), 
-        alpha =1.0,
-        weights="imagenet",
-        include_top=False,
-        classes = 1000)
+if BASE_MODEL == "mobilenetv2":
+    base_model = keras.applications.mobilenet_v2.MobileNetV2(
+            input_shape = (size, size, 3), 
+            alpha =1.0,
+            weights="imagenet",
+            include_top=False)
+
+elif BASE_MODEL == 'inceptionv3':
+    base_model = keras.applications.inception_v3.InceptionV3(
+            input_shape = (size, size, 3), 
+            weights="imagenet",
+            include_top=False)
 
 # print(base_model.summary())
 # keras.utils.plot_model(base_model, to_file=os.path.join(model_path, "mobilenetv2.png"))
+
+# freeze base_model
+for layer in base_model.layers:
+    layer.trainable = False
 
 # add fc layer and softmax layer
 x = base_model.output
@@ -58,21 +68,20 @@ x = keras.layers.GlobalAveragePooling2D()(x)
 x = keras.layers.Dense(1024, activation='relu')(x)
 x = keras.layers.Dense(1024, activation='relu')(x)
 x = keras.layers.Dense(512, activation='relu')(x)
-preds = keras.layers.Dense(classes, activation='softmax')(x)
+preds = keras.layers.Dense(classes, activation='softmax', name="softmax")(x)
 
 # merge model
 model = keras.models.Model(inputs=base_model.input, outputs=preds)
 
-# freeze base_model
-for layer in base_model.layers:
-    layer.trainable = False
-
 '''
 prepare data
 '''
-data_gen = DataGenerator(data_path, validation_split=validation_split)
+data_gen = DataGenerator(data_path, 
+                         augmentation = True,
+                         validation_split=validation_split)
 train_generator, validation_generator = data_gen.generate(batch_size, size)
-# get class name dict and save to label file
+
+# save class names
 class_name = validation_generator.class_indices
 print(class_name)
 with open(os.path.join(model_path, "labels.txt"), "w") as f:
@@ -80,7 +89,6 @@ with open(os.path.join(model_path, "labels.txt"), "w") as f:
 
 train_batches = len(train_generator)
 validation_batches= len(validation_generator)
-
 
 ''' 
 train model 
