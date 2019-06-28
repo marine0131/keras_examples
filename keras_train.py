@@ -6,23 +6,7 @@ import matplotlib.pyplot as plt
 import os
 import json
 from data_generator import DataGenerator
-
-def export_pb(model, output_dir, output_name, clear_devices=True):
-    sess = keras.backend.get_session()
-    output_names = [out.op.name for out in model.outputs]
-    graph = sess.graph
-    with graph.as_default():
-        input_graph_def = graph.as_graph_def()
-        if clear_devices:
-            for node in input_graph_def.node:
-                node.device = ""
-        frozen_graph = tf.graph_util.convert_variables_to_constants(
-                sess,
-                input_graph_def,
-                output_names)
-
-    tf.train.write_graph(frozen_graph, output_dir, name=output_name, as_text=False )
-    print("save pb model success: {}".format(os.path.join(output_dir, output_name)))
+from utils import h52pb
 
 
 '''
@@ -30,13 +14,14 @@ params
 '''
 size = 299
 batch_size = 128
-epochs = 100
+epochs = 60
 model_path = "./model"
-data_path = "../train_trash/training_data"
+data_path = ("/home/whj/DataSet/trashnet")
 validation_split = 0.2
-classes = 12
+classes = 18
 export_pbmodel = True
-BASE_MODEL = "inceptionv3" # mobilenetv2
+BASE_MODEL = "inceptionv3" 
+# BASE_MODEL = "mobilenetv2"
 
 
 '''
@@ -66,7 +51,7 @@ for layer in base_model.layers:
 x = base_model.output
 x = keras.layers.GlobalAveragePooling2D()(x)
 x = keras.layers.Dense(1024, activation='relu')(x)
-x = keras.layers.Dense(1024, activation='relu')(x)
+# x = keras.layers.Dense(1024, activation='relu')(x)
 x = keras.layers.Dense(512, activation='relu')(x)
 preds = keras.layers.Dense(classes, activation='softmax', name="softmax")(x)
 
@@ -123,11 +108,10 @@ if not os.path.exists(model_path):
 model_name = os.path.join(model_path, data_path.split("/")[-1]+".h5")
 
 model.save(model_name)
+del model
 
 '''
 save pb model
 '''
 if export_pbmodel:
-    output_dir = model_path
-    output_name = os.path.basename(os.path.normpath(data_path))+'.pb'
-    export_pb(model, output_dir, output_name, clear_devices=True)
+    h52pb.save_pb(model_name)

@@ -4,16 +4,23 @@ import cv2
 import json
 import tensorflow as tf
 from tensorflow import keras
-# import mobilenetv2_1 as MobileNetV2
 import numpy as np
+import matplotlib.pyplot as plt
+
+from utils import plot as mplt
+
+CLS_MAP = {'drys': 'drys', 'wets': 'wets', 'recycles':'recycles', 'harms':'harms', 'dry': "drys", 'cigarette': 'drys', 'bg': 'bg', 'electric': 'harms', 'milkbox': 'recycles', 'glass': 'recycles', 'metal': 'recycles', 'plastic': 'recycles', 'cloth': 'recycles', 'paper': 'recycles', 'cardboard': 'recycles', 'wet': 'wets'}
 
 def read_img(img_path):
-    img_data = cv2.imread(img_path)
-    img_data = cv2.resize(img_data, (224, 224))
+    return  cv2.imread(img_path)
+
+def preprocess(im, size):
+    img_data = cv2.resize(im, size)
     img_data = img_data.astype(np.float32)
     img_data = np.expand_dims(img_data, 0)
     # img_data = img_data / 255.0;
-    img_data = keras.applications.mobilenet_v2.preprocess_input(img_data)
+    # img_data = keras.applications.mobilenet_v2.preprocess_input(img_data)
+    img_data = keras.applications.inception_v3.preprocess_input(img_data)
     return img_data
 
 def find_key_by_value(mydict, value):
@@ -23,12 +30,14 @@ def find_key_by_value(mydict, value):
 
 if __name__ == '__main__':
     img_path = sys.argv[1]
-    label_path = "model/trashnet_lables.txt"
-    model_path = "model/trashnet_mobilenetv2.h5"
+    plot = True
+    label_path = "model/trashnet_labels_12.txt"
+    model_path = "model/trashnet_inceptionv3_12.h5"
+    im_size = (299,299)
 
     # with keras.utils.CustomObjectScope({'relu6': MobileNetV2.relu6}):
     model = keras.models.load_model(model_path)
-    model.summary()
+    # model.summary()
 
     with open(label_path, 'r') as f:
         classes = json.load(f)
@@ -37,21 +46,38 @@ if __name__ == '__main__':
     # pred = model.predict(test_generator)
     # print(pred)
 
-    true_cls = classes[os.path.basename(os.path.normpath(img_path))]
-
+    true_cls_name = os.path.basename(os.path.normpath(img_path))
+    # true_cls_name = CLS_MAP[cls_name]
 
     cls = []
+    true_cls = []
+    false_pred = []
+    false_images = []
+
     if os.path.isdir(img_path):
         for imfile in os.listdir(img_path):
-            print("reading file {}".format(imfile))
-            img= os.path.join(img_path, imfile)
-            all_predictions = model.predict(read_img(img))
+            im = read_img(os.path.join(img_path, imfile))
+            all_predictions = model.predict(preprocess(im, im_size))
             pred = np.argmax(all_predictions[0])
-            cls.append(1 if pred==true_cls else 0)
-            print(find_key_by_value(classes, pred), all_predictions[0, pred])
+            pred_name = find_key_by_value(classes, pred) 
+            print(pred_name, all_predictions[0, pred])
+            if pred_name != true_cls_name:
+                cls.append(0)
+                true_cls.append(true_cls_name)
+                false_pred.append(pred_name)
+                false_images.append(im)
+            else:
+                cls.append(1)
 
-    accuracy = float(np.sum(np.array(cls))) / len(cls)
-    print("accuracy: {}".format(accuracy))
-    # else:
-    #     result = trash_tf.detect(img_path)
-    #     print result
+        print("accuracy: {}".format(float(np.sum(np.array(cls))) / len(cls)))
+    else:
+        all_predictions = model.predict(read_img(img))
+        print(all_predictions)
+
+    if plot:
+        mplt.plot_images_labels_prediction(false_images, true_cls, false_pred,
+                s=(4,4),
+                pix=(128, 128))
+
+
+

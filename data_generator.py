@@ -2,7 +2,7 @@ from tensorflow import keras
 
 
 class DataGenerator():
-    def __init__(self, ptrain, ptest=None, augmentation=True, validation_split=0.2, feature_normalization=False):
+    def __init__(self, ptrain, ptest=None, augmentation=True, validation_split=0.2):
         """Data generation and augmentation
         # Arguments
             ptrain: string, training data folder .
@@ -22,8 +22,6 @@ class DataGenerator():
         if augmentation:
             self.data_gen = keras.preprocessing.image.ImageDataGenerator(
                 rescale=1. / 255,
-                featurewise_center = True,
-                featurewise_std_normalization = feature_normalization,
                 rotation_range = 30,
                 shear_range=0.5,
                 horizontal_flip=True,
@@ -32,8 +30,6 @@ class DataGenerator():
         else:
             self.data_gen = keras.preprocessing.image.ImageDataGenerator(
                 rescale=1. / 255,
-                featurewise_center = True,
-                featurewise_std_normalization = feature_normalization,
                 validation_split=self.validation_split)
 
 
