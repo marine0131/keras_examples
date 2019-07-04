@@ -1,5 +1,5 @@
 tflite_convert \
-    --output_file=./"$1".tflite \
-    --graph_def_file=./"$1".pb \
-    --input_arrays=input_1 \
-    --output_arrays=softmax/Softmax
+    --output_file=./"$2" \
+    --graph_def_file=./"$1" \
+    --input_arrays=input_1_1 \
+    --output_arrays=softmax_1/Softmax

@@ -9,7 +9,6 @@ import matplotlib.pyplot as plt
 
 from utils import plot as mplt
 
-CLS_MAP = {'drys': 'drys', 'wets': 'wets', 'recycles':'recycles', 'harms':'harms', 'dry': "drys", 'cigarette': 'drys', 'bg': 'bg', 'electric': 'harms', 'milkbox': 'recycles', 'glass': 'recycles', 'metal': 'recycles', 'plastic': 'recycles', 'cloth': 'recycles', 'paper': 'recycles', 'cardboard': 'recycles', 'wet': 'wets'}
 
 def read_img(img_path):
     return  cv2.imread(img_path)
@@ -31,13 +30,13 @@ def find_key_by_value(mydict, value):
 if __name__ == '__main__':
     img_path = sys.argv[1]
     plot = True
-    label_path = "model/trashnet_labels_12.txt"
-    model_path = "model/trashnet_inceptionv3_12.h5"
+    label_path = "model/trashnet_labels_23.txt"
+    model_path = "model/trashnet_nasnet.h5"
     im_size = (299,299)
 
     # with keras.utils.CustomObjectScope({'relu6': MobileNetV2.relu6}):
     model = keras.models.load_model(model_path)
-    # model.summary()
+    model.summary()
 
     with open(label_path, 'r') as f:
         classes = json.load(f)
