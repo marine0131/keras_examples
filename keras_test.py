@@ -11,11 +11,14 @@ from utils import plot as mplt
 
 
 def read_img(img_path):
-    return  cv2.imread(img_path)
+    # return keras.preprocessing.image.load_img(img_path)
+    return cv2.imread(img_path, cv2.IMREAD_UNCHANGED)
 
-def preprocess(im, size):
-    img_data = cv2.resize(im, size)
-    img_data = img_data.astype(np.float32)
+
+def preprocess(impath, size):
+    img = keras.preprocessing.image.load_img(impath, target_size=size)
+    # img_data = cv2.resize(im, size)
+    img_data = keras.preprocessing.image.img_to_array(img)
     img_data = np.expand_dims(img_data, 0)
     # img_data = img_data / 255.0;
     # img_data = keras.applications.mobilenet_v2.preprocess_input(img_data)
@@ -30,8 +33,8 @@ def find_key_by_value(mydict, value):
 if __name__ == '__main__':
     img_path = sys.argv[1]
     plot = True
-    label_path = "model/trashnet_labels_23.txt"
-    model_path = "model/trashnet_nasnet.h5"
+    label_path = "model/suncan_labels.txt"
+    model_path = "model/suncan_inceptionv3.h5"
     im_size = (299,299)
 
     # with keras.utils.CustomObjectScope({'relu6': MobileNetV2.relu6}):
@@ -46,25 +49,32 @@ if __name__ == '__main__':
     # print(pred)
 
     true_cls_name = os.path.basename(os.path.normpath(img_path))
+    print("true class: {}".format(true_cls_name))
     # true_cls_name = CLS_MAP[cls_name]
 
     cls = []
     true_cls = []
     false_pred = []
+    imfiles = []
     false_images = []
+    values = []
 
     if os.path.isdir(img_path):
         for imfile in os.listdir(img_path):
-            im = read_img(os.path.join(img_path, imfile))
-            all_predictions = model.predict(preprocess(im, im_size))
+            impath = os.path.join(img_path, imfile)
+            im = cv2.imread(impath)
+            all_predictions = model.predict(preprocess(impath, im_size))
             pred = np.argmax(all_predictions[0])
             pred_name = find_key_by_value(classes, pred) 
             print(pred_name, all_predictions[0, pred])
             if pred_name != true_cls_name:
                 cls.append(0)
+                imfiles.append(imfile)
+                false_images.append(im)
                 true_cls.append(true_cls_name)
                 false_pred.append(pred_name)
-                false_images.append(im)
+                values.append(all_predictions[0, pred])
+
             else:
                 cls.append(1)
 
@@ -74,9 +84,10 @@ if __name__ == '__main__':
         print(all_predictions)
 
     if plot:
-        mplt.plot_images_labels_prediction(false_images, true_cls, false_pred,
-                s=(4,4),
-                pix=(128, 128))
+        mplt.plot_images_labels_prediction(imfiles, false_images, true_cls, false_pred,
+                values,
+                s=(3,3),
+                pix=(256, 256))
 
 
 

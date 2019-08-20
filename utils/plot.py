@@ -4,7 +4,7 @@ import numpy as np
 import cv2
 
 
-def plot_images_labels_prediction(images, labels, preds, s=(4,4), pix=(64, 64)):
+def plot_images_labels_prediction(file_names, images, labels, preds, values, s=(4,4), pix=(64, 64)):
     fig, ax = plt.subplots(s[0], s[1])
     num = int(s[0]*s[1])
     for index in range(int(len(labels)/num) + 1):
@@ -17,7 +17,7 @@ def plot_images_labels_prediction(images, labels, preds, s=(4,4), pix=(64, 64)):
             ax = plt.subplot(s[0], s[1], i+1)
             im = cv2.resize(images[j], pix)
             ax.imshow(im)
-            title = "label=" + labels[j] + "pred=" + preds[j] 
+            title = file_names[j] + '\n' + labels[j] + '-->' + preds[j] + '(' +'%.3f'%values[j]+')'
             ax.set_title(title,fontsize=10)
             ax.set_xticks([])
             ax.set_yticks([])        
